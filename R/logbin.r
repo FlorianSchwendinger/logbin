@@ -1,5 +1,5 @@
 logbin <- function (formula, mono = NULL, data, subset, na.action, start = NULL, offset,
-            control = list(...), model = TRUE, method = c("cem", "em", "glm", "glm2", "ab"),
+            control = list(...), model = TRUE, method = c("cem", "em", "glm", "glm2", "ab", "auglag", "convex"),
             accelerate = c("em", "squarem", "pem", "qn"), control.method = list(), 
             warn = TRUE, ...) {
   call <- match.call()
@@ -37,7 +37,7 @@ logbin <- function (formula, mono = NULL, data, subset, na.action, start = NULL,
     fit$loglik <- as.numeric(ll.res)
     fit$aic.c <- AIC(res, k = 2 * nobs(res) / (nobs(res) - attr(ll.res, "df") - 1))  
   } else {
-    if (method == "ab") {
+    if (method %in% c("ab", "auglag", "convex")) {
       if (!is.null(mono)) stop(paste(method, "does not currently support monotonic constraints"))
       if (!identical(accelerate, "em")) warning(paste(method, "does not support acceleration"))
     }
@@ -74,6 +74,7 @@ logbin <- function (formula, mono = NULL, data, subset, na.action, start = NULL,
                         start = start, control = control)
     if (method %in% c("cem", "em")) logbin.args$accelerate <- accelerate
     logbin.args <- c(logbin.args, list(control.method = control.method, warn = warn))
+    # return(list(logbin.method, logbin.args))
     res <- do.call(logbin.method, logbin.args)    
     mres <- match(outnames, names(res), 0L)
     fit[names(res)[mres]] <- res[mres]

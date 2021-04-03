@@ -2,7 +2,7 @@ import(splines)
 import(glm2)
 import(turboEM)
 importFrom("grDevices", "dev.new", "rainbow")
-importFrom("graphics", "abline", "lines", "plot")
+importFrom("graphics", "abline", "lines", "plot", "par")
 importFrom("stats", ".MFclass", ".checkMFClasses", ".getXlevels",
            "AIC", "as.formula", "binomial", "confint.default",
            "constrOptim", "contr.treatment", "contrasts<-", "dbinom",
@@ -14,6 +14,13 @@ importFrom("stats", ".MFclass", ".checkMFClasses", ".getXlevels",
            "quantile", "reformulate", "relevel", "residuals",
            "setNames", "stat.anova", "terms", "terms.formula",
            "update")
+importFrom("utils", "head", "modifyList")
+importFrom("slam", "simple_triplet_diag_matrix", "simple_triplet_zero_matrix",
+           "simple_triplet_matrix")
+importFrom("ROI", "ROI_solve", "OP", "objective", "constraints", "bounds", "solution",
+           "C_constraint", "V_bound",
+           "K_lin", "K_expp")
+importFrom("alabama", "auglag")
 S3method(confint,logbin)
 S3method(anova,logbin)
 S3method(anova,logbinlist)

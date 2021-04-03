@@ -5,9 +5,11 @@ Description: Methods for fitting log-link GLMs and GAMs to binomial data,
 Version: 2.0.4.9000
 Authors@R: c(person("Mark W.", "Donoghoe", email = "markdonoghoe@gmail.com", rol = c("aut","cre")),
              person("Ian C.", "Marschner", rol = "ths"),
-             person("Alexandra C.", "Gillett", rol = "ctb", comment = "wrote an initial version of the nplbin function"))
+             person("Alexandra C.", "Gillett", rol = "ctb", comment = "wrote an initial version of the nplbin function"),
+             person("Florian", "Schwendinger", rol = "ctb", comment = "wrote convex and aulag method"))
 Depends: R (>= 3.0.1)
-Imports: splines, glm2, turboEM
+Imports: splines, glm2, turboEM, ROI, slam, alabama
+Suggests: ROI.plugin.ecos
 License: GPL (>= 2)
 LazyData: true
 URL: https://github.com/mdonoghoe/logbin

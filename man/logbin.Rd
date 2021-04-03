@@ -12,7 +12,7 @@ regression models.
 \usage{
 logbin(formula, mono = NULL, data, subset, na.action, start = NULL,
        offset, control = list(...), model = TRUE, 
-       method = c("cem", "em", "glm", "glm2", "ab"),
+       method = c("cem", "em", "glm", "glm2", "ab", "auglag", "convex"),
        accelerate = c("em", "squarem", "pem", "qn"), 
        control.method = list(), warn = TRUE, ...)
 }
@@ -35,7 +35,8 @@ logbin(formula, mono = NULL, data, subset, na.action, start = NULL,
   
   \code{method = "glm"} and \code{"glm2"} cannot impose
   monotonicity constraints, and they are not currently
-  supported for \code{method = "ab"}.
+  supported for \code{method = "ab"}, \code{method = "auglag"}
+  and \code{method = "convex"}.
 }
   \item{data}{
 	an optional data frame, list or environment
@@ -93,6 +94,12 @@ logbin(formula, mono = NULL, data, subset, na.action, start = NULL,
   
   \code{"ab"} implements an adaptive barrier method, using the
   \code{\link{constrOptim}} function.
+
+  \code{"auglag"} implements an adaptive barrier method, using the
+  \code{\link{auglag}} function.
+
+  \code{"convex"} implements an adaptive barrier method, using 
+  convex optimization.
   
   \code{"\link{glm}"} or \code{"\link[glm2]{glm2}"} may be used
   to compare the results from the usual IWLS algorithms on the same model.
