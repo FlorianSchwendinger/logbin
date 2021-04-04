@@ -41,7 +41,8 @@ auglag_optim_control <- function(control = list()) {
 }
 
 
-logbin.auglag.fit <- function(x, y0, y1, start, offset, ceps = 1e-7, control = list(), control.optim = list()) {
+logbin.auglag.fit <- function(x, y0, y1, start, offset, ceps = 1e-7, 
+                              control.outer = list(), control.optim = list()) {
     y <- y0 + y1
     nloglike <- function(beta) {
         eta <- drop(tcrossprod(beta, x)) + offset
@@ -58,11 +59,9 @@ logbin.auglag.fit <- function(x, y0, y1, start, offset, ceps = 1e-7, control = l
 
     constraint <- function(beta) -drop(x %*% beta) - ceps
     hin.jac <- function(beta) -x
-    control <- set_defaults(control, list(tol = 1e-7, itmax = 10000L, trace = FALSE))
-    control.optim <- set_defaults(control.optim, list(maxit = 10000L))
     s <- auglag(par = start, fn = nloglike, gr = gradient, 
                 hin = constraint, hin.jac = hin.jac, 
-                control.outer = control, control.optim = control.optim)
+                control.outer = control.outer, control.optim = control.optim)
     s
 }
 
@@ -87,11 +86,11 @@ logbin.auglag <- function(mt, mf, Y, offset, mono, start, control, control.metho
         start <- c(-1, 1e-3 + double(ncol(x) - 1L))
     }
 
-    ceps <- if (is_valid_ceps(control$ceps)) control$ceps else 1e-7
+    ceps <- if (is_valid_ceps(control.method$ceps)) control.method$ceps else 1e-7
     fit <- logbin.auglag.fit(x, y0 = n - y1, y1 = y1, start = start, 
                              offset = offset, ceps = ceps,
-                             control = auglag_outer_control(control), 
-                             control.optim = control.method)
+                             control.outer = auglag_outer_control(control.method), 
+                             control.optim = auglag_optim_control(control.method$control.optim))
 
     coefficients <- fit$par
     names(coefficients) <- xnames

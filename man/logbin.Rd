@@ -122,6 +122,13 @@ logbin(formula, mono = NULL, data, subset, na.action, start = NULL,
   ignored and the equivalent items from the supplied \code{logbin.control} argument
   are used instead. May also contain element \code{method} (default \code{"BFGS"}), 
   which is passed to the \code{method} argument of \code{\link{constrOptim}}.
+
+  If \code{method = "auglag"}, this is passed to the \code{control.outer} argument
+  of \code{\link{auglag}}. The conditional argument \code{control.optim}
+  is passed to the \code{control.optim} of \code{\link{auglag}}.
+
+  If \code{method = "convex"}, this is passed to the \code{control} argument
+  of \code{\link{ROI_solve}}.
   
   If any items are not specified, the defaults are used.
 }
@@ -203,6 +210,12 @@ boundary of its (possibly constrained) parameter space.
 Alternatively, an adaptive barrier method can be used by specifying
 \code{method = "ab"}, which maximises the likelihood subject to
 constraints on the fitted values.
+
+\code{method = "auglag"} uses the augmented Lagrangian method of
+package \pkg{alabama} to solve the maximum likelihood problem.
+
+\code{method = "convex"} uses conic optimization to solve the
+maximum likelihood problem.
 }
 \value{
 \code{logbin} returns an object of class \code{"logbin"},
@@ -253,6 +266,9 @@ Marschner, I. C. (2014). Combinatorial EM algorithms.
 
 Marschner, I. C. and A. C. Gillett (2012). Relative risk regression: reliable
 and flexible methods for log-binomial models. \emph{Biostatistics} 13(1): 179--192.
+
+Schwendinger, F. and Grün, B. and Hornik, K. (2021). A comparison of optimization 
+solvers for log binomial regression including conic programming. \emph{Comput Stat}.
 }
 \author{
 Mark W. Donoghoe \email{markdonoghoe@gmail.com}
