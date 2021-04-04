@@ -16,7 +16,7 @@ importFrom("stats", ".MFclass", ".checkMFClasses", ".getXlevels",
            "update")
 importFrom("utils", "head", "modifyList")
 importFrom("slam", "simple_triplet_diag_matrix", "simple_triplet_zero_matrix",
-           "simple_triplet_matrix")
+           "as.simple_triplet_matrix", "simple_triplet_matrix")
 importFrom("ROI", "ROI_solve", "OP", "objective", "constraints", "bounds", "solution",
            "C_constraint", "V_bound",
            "K_lin", "K_expp")

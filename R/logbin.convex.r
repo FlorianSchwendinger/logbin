@@ -13,81 +13,33 @@ neg_log_likelihood <- function(beta, y1, n, x, offset = 0) {
   -sum(dbinom(y1, size = n, prob = exp(eta + offset), log = TRUE))
 }
 
-logbin.convex.fit_dense <- function(x, y0, y1, solver = "ecos", ceps = 1e-7, 
-                              roi_control = list(), dry_run = FALSE) {
-    if (!"tol" %in% names(roi_control)) {
-      roi_control$tol <- 1e-8  
-    }
 
+logbin.convex.fit <- function(x, y0, y1, solver = "ecos", ceps = 1e-7,
+                              roi_control = list(), dry_run = FALSE) {
     b0 <- y0 > 0L
-    b1 <- y1 > 0L
-    x0 <- x[b0,]
-    x1 <- x[b1,]
+    x0 <- as.simple_triplet_matrix(x[ b0, , drop = FALSE])
+    x1 <- as.simple_triplet_matrix(x[!b0, , drop = FALSE])
     n <- nrow(x0) + nrow(x1)
-    
-    L1 <- cbind(rbind(x0, x1), matrix(0, n, 2 * nrow(x0)))
-    log1exp <- function(xi, j, n_y_is_0) {
-        k <- length(xi)        
-        si <- c(rep.int(1, k),     3,                4,     6)
-        sj <- c(seq_along(xi), k + j, k + n_y_is_0 + j, k + j)
-        sv <- c(          -xi,    -1,               -1,     1)
-        simple_triplet_matrix(si, sj, sv, nrow = 6L, ncol = (k + 2 * n_y_is_0))
-    }
-    L2 <- mapply(log1exp, split(x0, seq_len(nrow(x0))), seq_len(nrow(x0)), 
-                 MoreArgs = list(n_y_is_0 = nrow(x0)), SIMPLIFY = FALSE)
-    rhs <- c(c(0, 1, 0), c(0, 1, 1))
-    rhs <- c(rep(-ceps, n), rep(rhs, nrow(x0)))
-    cones <- c(K_lin(n), K_expp(2 * nrow(x0)))
-    L <- do.call(rbind, c(list(L1), L2))
+
+    L1 <- cbind(rbind(x0, x1), stzm(n, 2 * nrow(x0)))
+    K1 <- K_lin(n)
+    rhs1 <- rep(-ceps, nrow(x))
+
+    k <- ncol(x)
+    sv <- as.vector(rbind(t(-x[b0, ]), -1, -1, 1))
+    si <- c(rep.int(1, k), 3L, 4L, 6L)
+    si <- si + rep(6L * (seq_len(nrow(x0)) - 1L), each = length(si))
+    sj <- c(k, k + nrow(x0), k)
+    sj <- c(rbind(matrix(seq_len(k), nrow = k, ncol = nrow(x0)),
+            matrix(sj + rep(seq_len(nrow(x0)), each = 3), nrow = 3)))
+    L2 <- simple_triplet_matrix(si, sj, sv, nrow = 6L * nrow(x0), 
+                                ncol = (k + 2 * nrow(x0)))
+    K2 <- K_expp(2 * nrow(x0))
+    rhs2 <- rep(c(c(0, 1, 0), c(0, 1, 1)), nrow(x0))
 
     obj <- c(y1 %*% x, double(nrow(x0)), y0[b0])
     o <- OP(objective = obj, 
-            constraints = C_constraint(L, cones, rhs),
-            bounds = V_bound(ld = -Inf, nobj = length(obj)),
-            maximum = TRUE)
-
-    if ( dry_run ) return(o)
-    so <- ROI_solve(o, solver = solver, control = roi_control)
-    rval <- head(solution(so, force = TRUE), NCOL(x))
-    if ( solution(so, "status_code") != 0L ) {
-        warning("Solution: ", paste(solution(so, "status")$msg$message, collapse = " "))
-    }
-    attributes(rval)$solution <- so
-    return(rval)
-}
-
-
-logbin.convex.fit <- function(x, y0, y1, solver = "ecos", ceps = 1e-7, 
-                              roi_control = list(), dry_run = FALSE) {
-    if (!"tol" %in% names(roi_control)) {
-      roi_control$tol <- 1e-8  
-    }
-
-    b0 <- y0 > 0L
-    b1 <- y1 > 0L
-    x0 <- x[b0,]
-    x1 <- x[b1,]
-    n <- nrow(x0) + nrow(x1)
-    
-    L1 <- cbind(rbind(x0, x1), matrix(0, n, 2 * nrow(x0)))
-    log1exp <- function(xi, j, n_y_is_0) {
-        M <- matrix(0, nrow = 6, ncol = length(xi) + 2 * n_y_is_0)
-        M[1, seq_along(xi)] <- -xi
-        M[3, length(xi) + j] <- -1
-        M[4, length(xi) + n_y_is_0 + j] <- -1
-        M[6, length(xi) + j] <- 1
-        M
-    }
-    L2 <- mapply(log1exp, split(x0, seq_len(nrow(x0))), seq_len(nrow(x0)), 
-                 MoreArgs = list(n_y_is_0 = nrow(x0)), SIMPLIFY = FALSE)
-    rhs <- c(c(0, 1, 0), c(0, 1, 1))
-    rhs <- c(rep(-ceps, n), rep(rhs, nrow(x0)))
-    cones <- c(K_lin(n), K_expp(2 * nrow(x0)))
-    L <- do.call(rbind, c(list(L1), L2))
-
-    obj <- c(y1 %*% x, double(nrow(x0)), y0[b0])
-    o <- OP(objective = obj, 
-            constraints = C_constraint(L, cones, rhs),
+            constraints = C_constraint(rbind(L1, L2), c(K1, K2), c(rhs1, rhs2)),
             bounds = V_bound(ld = -Inf, nobj = length(obj)),
             maximum = TRUE)
 
@@ -136,6 +88,7 @@ logbin.convex <- function(mt, mf, Y, offset = NULL, mono = NULL, start = NULL, c
     }
 
     ceps <- if (is_valid_ceps(control$ceps)) control$ceps else 1e-7
+    control.method <- set_defaults(control.method, list(tol = 1e-8))
     fit <- logbin.convex.fit(x, y0 = n - y1, y1 = y1, solver = solver, ceps = ceps,
                              roi_control = control.method)
 
